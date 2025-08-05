@@ -1,48 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>PerfectCorp Skin Analysis</title>
   <style>
     #camera-container {
       width: 360px;
       height: 480px;
       margin-bottom: 10px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
   <div id="camera-container"></div>
-  <button onclick="openCamera()">Open Camera</button>
-  <button onclick="captureImage()">Capture Image</button>
-  <button onclick="closeCamera()">Close Camera</button>
+  <button id="openBtn" disabled>Open Camera</button>
+  <button id="captureBtn" disabled>Capture Image</button>
+  <button id="closeBtn" disabled>Close Camera</button>
+
+  <!-- Add React and ReactDOM for the SDK's dependencies -->
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  
   <script src="https://plugins-media.makeupar.com/v1.0-skincare-camera-kit/sdk.js"></script>
+
   <script>
-    window.ymkAsyncInit = function () {
-      YMK.init({
-        width: 360,
-        height: 480,
-        language: "enu"
-      });
+    // Declare the async initialization function as required by the SDK
+    window.ymkAsyncInit = function() {
+      console.log("YMK SDK is ready to initialize");
     };
 
-    function openCamera() {
-      YMK.openSkincareCamera(); // built-in UI and face-quality
-    }
+    let sdkReady = false;
+    let cameraOpen = false;
 
-    function captureImage() {
-      YMK.capture().then(result => {
-        console.log("Captured Image (Base64):", result);
-        // Optional: preview image
-        const img = document.createElement("img");
-        img.src = result;
-        img.style.maxWidth = "100%";
-        document.body.appendChild(img);
-      });
-    }
+    // Initialize the SDK when it's available
+    const waitForSDK = setInterval(() => {
+      if (typeof YMK !== "undefined" && typeof YMK.init === "function") {
+        clearInterval(waitForSDK);
 
-    function closeCamera() {
-      YMK.close();
+        try {
+          // Initialize the SDK with proper configuration
+          YMK.init({
+            width: 360,
+            height: 480,
+            language: "enu",
+            container: "#camera-container",
+            // Explicitly set module mode to UI
+            moduleMode: "ui"
+          });
+
+          sdkReady = true;
+
+          // Enable buttons once SDK is ready
+          document.getElementById("openBtn").disabled = false;
+          document.getElementById("closeBtn").disabled = false;
+
+          console.log("✅ SDK initialized successfully!");
+        } catch (error) {
+          console.error("SDK initialization failed:", error);
+        }
+      }
+    }, 300);
+
+    // Button click handlers
+    document.getElementById("openBtn").addEventListener("click", async () => {
+      if (!sdkReady) {
+        alert("SDK not initialized yet.");
+        return;
+      }
+      
+      try {
+        await YMK.openSkincareCamera();
+        cameraOpen = true;
+        document.getElementById("captureBtn").disabled = false;
+        console.log("Camera opened successfully");
+      } catch (error) {
+        console.error("Failed to open camera:", error);
+        alert("Failed to open camera. Please check console for details.");
+      }
+    });
+
+    document.getElementById("captureBtn").addEventListener("click", async () => {
+      if (!sdkReady || !cameraOpen) {
+        alert("Camera not ready for capture.");
+        return;
+      }
+      
+      try {
+        // The capture method might not return a Promise in all versions
+        // Handle both Promise and non-Promise cases
+        const captureResult = YMK.capture();
+        
+        if (captureResult && typeof captureResult.then === "function") {
+          // Handle Promise case
+          const result = await captureResult;
+          console.log("Captured Image (Base64):", result);
+          displayCapturedImage(result);
+        } else if (typeof captureResult === "string") {
+          // Handle direct string return (base64)
+          console.log("Captured Image (Base64):", captureResult);
+          displayCapturedImage(captureResult);
+        } else {
+          console.warn("Unexpected capture result:", captureResult);
+          alert("Capture completed but result format unexpected.");
+        }
+      } catch (error) {
+        console.error("Capture failed:", error);
+        alert("Capture failed. Please check console for details.");
+      }
+    });
+
+    document.getElementById("closeBtn").addEventListener("click", async () => {
+      if (!sdkReady || !cameraOpen) return;
+      
+      try {
+        await YMK.close();
+        cameraOpen = false;
+        document.getElementById("captureBtn").disabled = true;
+        console.log("Camera closed successfully");
+      } catch (error) {
+        console.error("Failed to close camera:", error);
+      }
+    });
+
+    function displayCapturedImage(base64Data) {
+      // Clear previous images
+      const oldImages = document.querySelectorAll(".captured-image");
+      oldImages.forEach(img => img.remove());
+      
+      const img = document.createElement("img");
+      img.src = base64Data;
+      img.style.maxWidth = "100%";
+      img.classList.add("captured-image");
+      document.body.appendChild(img);
     }
   </script>
 </body>
