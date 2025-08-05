@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Your Skin Analysis Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f1f1f1;
+    }
+
+    .result-box {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="result-box">
+    <h1>Skin Analysis Results</h1>
+    <div id="results-output">
+      <p>Loading results...</p>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(sessionStorage.getItem("skinResults"));
+
+    if (data) {
+      const output = document.getElementById("results-output");
+
+      // Sample output - customize based on real data structure
+      output.innerHTML = `
+        <p><strong>Score:</strong> ${data.score || "N/A"}</p>
+        <p><strong>Analysis:</strong> ${data.analysis || "No detailed message"}</p>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      `;
+    } else {
+      document.getElementById("results-output").innerHTML = `
+        <p>No results found. Please run the analysis first.</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>

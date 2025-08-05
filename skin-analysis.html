@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PerfectCorp Skin Analysis</title>
+  <style>
+    #camera-container {
+      width: 360px;
+      height: 480px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="camera-container"></div>
+  <button onclick="openCamera()">Open Camera</button>
+  <button onclick="captureImage()">Capture Image</button>
+  <button onclick="closeCamera()">Close Camera</button>
+  <script src="https://plugins-media.makeupar.com/v1.0-skincare-camera-kit/sdk.js"></script>
+  <script>
+    window.ymkAsyncInit = function () {
+      YMK.init({
+        width: 360,
+        height: 480,
+        language: "enu"
+      });
+    };
+
+    function openCamera() {
+      YMK.openSkincareCamera(); // built-in UI and face-quality
+    }
+
+    function captureImage() {
+      YMK.capture().then(result => {
+        console.log("Captured Image (Base64):", result);
+        // Optional: preview image
+        const img = document.createElement("img");
+        img.src = result;
+        img.style.maxWidth = "100%";
+        document.body.appendChild(img);
+      });
+    }
+
+    function closeCamera() {
+      YMK.close();
+    }
+  </script>
+</body>
+</html>
